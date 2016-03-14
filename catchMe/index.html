@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+    <title>Moje prasiatko</title>
+		<script type="text/javascript" src="js/phaser.min.js"></script>
+    <style type="text/css" style="css/style.css"> </style>
+</head>
+<body>
+
+<script type="text/javascript">
+//Sirka a vyska hracieho platna
+var width = 800
+var height = 600
+//vytvorime si hracie platno
+var game = new Phaser.Game(width, height, Phaser.CANVAS, 'phaser-example');
+//hodnota skore na zaciatku je 0
+var score = 0;
+//objekt textu do ktoreho sa zobrazi zobrazi skore
+var scoreText;
+//predmety na obrazovke
+var predmety = [];
+
+// kolko zivotov mas na zaciatku
+var zivotyNaZaciatku = 10;
+// stav zivotov pocas hry
+var zivoty = zivotyNaZaciatku;
+// tu su ulozene objekty srdiecok (zivotov)
+var zivotyImgs = [];
+// v tejto premennej budeme ukladat v ktorom leveli sme (zaciname levelom 1)
+var level = 1;
+// tu ulozime kolko objektov sme znicili
+var killed = 0;
+//kolko treba na vstup do noveho levelu
+var killedForLevel=1
+// tu je zoznam objektov, ktore sa budu zobrazovat
+// posledny objekt musi byt bomba on je specialny
+// ak ho neznicis, tak stratis zivot
+var objs = ["apple", "cake", /*'balon',*/ 'bomb']
+
+// definujeme si z coho sa bude nasa hra skladat
+var play = function(game){};
+play.prototype =
+	{ preload: preload, create: create, update: update}
+
+
+function preload() {
+	//nahraj srdce
+	game.load.image("heart", "assets/heart.png");
+	//nahraj diamant (skore)
+	game.load.image("score", "assets/score.png");
+	//nahraj jablko
+	game.load.image("apple", "assets/apple.png");
+	//nahraj kolac
+	game.load.image("cake", "assets/cake.png");
+	// nahraj explodujucu bombu
+	game.load.spritesheet('bomb', 'assets/BombExploding.png', 32, 64);
+	//balon
+	game.load.image("balon", "assets/balon.png");
+}
+
+function create() {
+
+//tu sa kreslia zivoty (srdiecka)
+	for(var i = 0; i<zivoty; i++){
+		zivotyImgs.push(game.add.sprite(30+i*32, 10, "heart"));
+	}
+	//tu sa prvy krat zobrazi skore
+	game.add.sprite(30, 40, "score")
+	scoreText = game.add.text(60, 47, score, { fontSize: '14px', fill: '#fff' });
+	//tu je kolko bude objektov na zaciatku
+	for(var i = 0; i<level; i++){
+		createObj()
+	}
+}
+//vybuch bomby
+function bum() {
+	this.inputEnabled = false;
+	var animFire = this.animations.add('fire', [7, 8, 9, 10, 11, 12]);
+	animFire.onComplete.add(bumFinished, this)
+	animFire.play(5, false);
+}
+//ked vybuche odpocita sa 5 bodov a znizi sa o jeden zivot 
+function bumFinished(){
+	score = Math.max(0, score - 5);
+	var added = game.add.text(this.x, this.y, -5, { fontSize: '14px', fill: '#fff' });
+	var addedTween=game.add.tween(added);
+	addedTween.to( { x: this.x + 20, y:this.y - 20, alpha: 0}, 1000, Phaser.Easing.Linear.None, true, 0, 0, false);
+	addedTween.onComplete.add(function() {this.kill()}, added)
+	killObj(this);
+	zivotDole();
+	createObj();
+}
+//klikol si na dobry objekt
+function klikOk() {
+	score++;
+	killed++;
+	var added = game.add.text(this.x, this.y, 1, { fontSize: '14px', fill: '#fff' });
+	var addedTween=game.add.tween(added);
+	addedTween.to( { x: this.x + 20, y:this.y - 20, alpha: 0}, 500, Phaser.Easing.Linear.None, true, 0, 0, false);
+	addedTween.onComplete.add(function() {
+		this.kill()
+		createObj();
+	}, added)
+	killObj(this);
+}
+// odstran objekt z obrazovky
+function killObj(obj){
+	obj.kill();
+	predmety = predmety.filter(function (i) {
+		return (i != obj)
+	})
+}
+
+//objekt je ukazany
+function shown(){
+	this.start()
+}
+//cakanie skoncilo
+function wait(){
+	this.start()
+}
+//objekt je uz skryty
+function hidden(obj){
+		killObj(obj);
+		createObj();
+}
+
+function zivotDole(){
+	var last = zivotyImgs.pop();
+	zivoty--;
+	if(last) last.kill();
+}
+
+function update() {
+	//vzdy nastav nove skore
+	scoreText.text = score;
+
+	//ak nemas zivoty, tak skonci hru
+	if (!zivoty){
+		game.state.start('gameOver');
+		return;
+	}
+	if (killed && killed >= killedForLevel){
+		killed = 0;
+		level++;
+		predmety.map(function(i) {i.kill()})
+		predmety = []
+		game.state.start('level');
+	}
+
+}
+
+function rnd(max, min){
+
+	return Math.floor((Math.random() * max) + (min||0));
+}
+
+function createObj() {
+	if (predmety.length>=level) return null;
+	var index = rnd(objs.length, 0);
+	var obj = game.add.sprite(rnd(width - 50, 50), rnd(height - 74, 50), objs[index]);
+	// nastavenie co urobit ak klikneme na objekt
+	obj.inputEnabled = true;
+	obj.events.onInputDown.add(klikOk, obj);
+	// uloz predmet do pamate
+	predmety.push(obj)
+	if (index == objs.length - 1) {
+		// animacia horenia bomby
+		animBurn = obj.animations.add('burn', [0, 1, 2, 3, 4, 5, 6]);
+		animBurn.onComplete.add(bum, obj)
+		animBurn.play(3, false);
+		return obj;
+	} else {
+		// tu je animacia objektu
+		obj.alpha = 0;
+		var showTween=game.add.tween(obj);
+		var waitTween=game.add.tween(obj);
+		var hideTween=game.add.tween(obj);
+		showTween.to( { alpha: 1 }, 500, Phaser.Easing.Linear.None, false, 0, 0, false);
+		waitTween.to( {}, rnd(2000, 500), Phaser.Easing.Linear.None, false, 0, 0, false);
+		hideTween.to( { alpha: 0 }, 500, Phaser.Easing.Linear.None, false, 0, 0, false);
+
+		showTween.onComplete.add(shown, waitTween)
+		waitTween.onComplete.add(wait, hideTween)
+		hideTween.onComplete.add(hidden, showTween, 0, obj)
+
+		showTween.start()
+		return obj;
+	}
+}
+
+
+// ak prehras spusti sa tato cast hry
+var gameOver = function(game) {};
+gameOver.prototype = {
+	//vytvori sa prostredie
+	create: function() {
+		// pocuvaj, ci niekto stlacil medzeru
+		this.spacebar = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+		// vypiseme konecne skore
+		var label = game.add.text(width / 2 , height / 2, 'Koniec hry\n Tvoje skóre je '+score+'\nStlač MEDZERNÍK pre novú hru',{ font: '22px Lucida Console', stroke: '#fff', strokeThickness: 2, fill: '#111', align: 'center'});
+		label.anchor.setTo(0.5, 0.5);
+	},
+	update: function() {
+		//ak je stlaceny medzernik spust hru odznovu
+		if (this.spacebar.isDown) {
+			//pri novom starte nastavim pociatocne hodnoty hry
+			score = 0;
+			killed = 0;
+			zivoty = zivotyNaZaciatku;
+			level = 1;
+			predmety = []
+			//opatovne spustenie hry
+			game.state.start('play');
+		}
+	}
+};
+
+// stav ked ma hrac vstupit do noveho levelu
+var newLevel = function(game) {};
+newLevel.prototype = {
+	//vytvori sa prostredie
+	create: function() {
+		// pocuvaj ci stalcil niekto medzernik
+		this.spacebar = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+		// vypiseme skore a informaciu o novom leveli
+		var label = game.add.text(width / 2 , height / 2, 'LEVEL '+level+'\n Tvoje skóre je '+score+'\nStlač MEDZERNÍK pre vstup do levelu',{ font: '22px Lucida Console', stroke: '#fff', strokeThickness: 2, fill: '#111', align: 'center'});
+		label.anchor.setTo(0.5, 0.5);
+	},
+	update: function() {
+		//ak je stlaceny medzernik vstup do noveho levelu
+		if (this.spacebar.isDown) {
+			//vynulujeme pocitadlo kolko pre urcenie ci ideme do noveho levelu
+			killed = 0;
+			// spustenie hry v novom leveli
+			game.state.start('play');
+		}
+	}
+};
+
+//hra ma tri stavy (hra, prehrata hra, vstup do noveho levelu)
+game.state.add("play", play);
+game.state.add("gameOver", gameOver);
+game.state.add("level", newLevel);
+game.state.start('level');
+</script>
+
+</body>
+</html>
