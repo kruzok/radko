@@ -1,184 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <script src="./assets/react.js"></script>
-  <script src="./assets/react-dom.js"></script>
-  <script src="./assets/browser.min.js"></script>
-<script>
-var nazov = "Darček pre kamaráta alebo kamarátku"
-
-var otazka1 =  {
-  id: 1,
-  otazka: "Komu kupuješ darček",
-  moznosti: [
-    {
-      moznost: "kamarát",
-      dalej: 2
-    },
-    {
-      moznost: "kamarátka",
-      odpoved: "Kamarátka sa najviac poteší bábike"
-    },
-    {
-      moznost: "rodicia",
-      dalej: 4
+  <meta charset="UTF-8">
+  <link href="mui.min.css" rel="stylesheet" type="text/css" />
+  <style>
+    body {
+      background-color: #eee;
     }
-  ]
-  }
-  var otazka2 =  {
-    id: 2,
-    otazka: "Rád hra futbal",
-    moznosti: [
-      {
-        moznost: "áno",
-        dalej: 3
-      },
-      {
-        moznost: "nie",
-        odpoved: "Kúp mu autíčko"
-      }
-    ]
-    }
-
-    var otazka3 =  {
-      id: 3,
-      otazka: "Má rad Lionela Messiho",
-      moznosti: [
-        {
-          moznost: "áno",
-          odpoved: "Kúp mu tričko a pomocou fixiek na textil mu urob dres Messiho"
-        },
-        {
-          moznost: "nie",
-          odpoved: "Kúp mu futbalovú loptu"
-        }
-      ]
-      }
-    var otazka4 =  {
-      id: 4,
-      otazka: "maju radi dobre jedla?",
-      moznosti: [
-        {
-          moznost: "áno",
-          odpoved: "urob im dobru veceru"
-        },
-        {
-          moznost: "nie",
-          odpoved: "nakresli im super obrazok!!!!!!!!!!!"
-        }
-      ]
-      }
-
-
-var databaza = [otazka1, otazka2, otazka3, otazka4
-]
-
-</script>
-<link href="./assets/mui.min.css" rel="stylesheet" type="text/css" />
-<style>
-  body {
-    background-color: #eee;
-  }
-</style>
+  </style>
 </head>
 <body>
-  <div id="content"></div>
-   <script type="text/babel">
-   var Reccomend = React.createClass({
-     render: function() {
-       return(
-         <h2>{this.props.children}</h2>
-       )
-     }
-   })
-   var Answer = React.createClass({
-     click: function() {
-       var option = this.props.current
-
-       if(option.odpoved) {
-         this.props.reccomend(option.odpoved)
-       } else {
-         this.props.next(option.dalej)
-       }
-     },
-     render: function() {
-       return(
-         <button className="mui-btn mui-btn--primary" onClick={this.click}>{this.props.children}</button>
-       )
-     }
-   })
-
-
-   var QueryMe = React.createClass({
-     getInitialState: function() {
-       return {query: this.props.query, reccomend: null};
-     },
-     changeState: function(i) {
-       this.setState({query: i})
-     },
-
-     reccomendThis: function(text) {
-       this.setState({reccomend: text})
-     },
-
-     render: function() {
-       var otazka = null;
-       var data = this.props.databaza;
-       for(var i = 0; i< data.length; i++) {
-         if (this.state.query == data[i].id){
-           otazka = data[i]
-         }
-       }
-       if (otazka == null) {
-         return(
-           <div className="commentBox">
-              Máš nejakú chybu v databáze
-           </div>
-         )
-       }
-       var changeState = this.changeState
-       var reccomendThis = this.reccomendThis
-       var options = otazka.moznosti.map(function (option, i){
-         return(<Answer key={i} database={data} current={option} next={changeState} reccomend={reccomendThis}>{option.moznost}</Answer>)
-       })
-       var result = null;
-       if (this.state.reccomend) {
-         result = <div className="commentBox">
-           <Reccomend>{this.state.reccomend}</Reccomend>
-         </div>
-       } else {
-         result = <div className="commentBox">
-           <h2>{otazka.otazka}</h2>
-           {options}
-         </div>
-       }
-       return (
-         <div className="mui-container-fluid">
-           <div className="mui-row">
-             <div className="mui-col-sm-10 mui-col-sm-offset-1">
-             <h1>{nazov}</h1>
-             <div className="mui-panel">
-               <div className="mui-row">
-                 <div className="mui-col-sm-12">
-          {result}
-          <br/>
-          <br/>
-          <br/>
-          <a href="index.html">Chcem začať od začiatku</a>
-                  </div>
-                </div>
-              </div>
-              </div>
+  <div class="mui-container-fluid">
+    <div class="mui-row">
+      <div class="mui-col-sm-10 mui-col-sm-offset-1">
+        <h1>Hry mojej tvorby</h1>
+        <h2>Niečo o mne</h2>
+        <div class="mui-panel">
+          <div class="mui-row">
+            <div class="mui-col-sm-7">
+              Volám sa Radko Trnka. Rád sa hrám. Najradšej mám RPG hry. Rad by som naprogramoval nejaku strategickú alebo bojovú hru.
+            </div>
+            <div class="mui-col-sm-5">
+              <img width="100%" src="http://www.ip-adresy-minecraft-serveru.estranky.cz/img/articles/10.jpg"/>
             </div>
           </div>
-       );
-     }
-   });
-   ReactDOM.render(
-     <QueryMe databaza={databaza} query={1}/>,
-     document.getElementById('content')
-   );
-   </script>
+        </div>
+        <h2>Tu sú moje programy</h2>
+        <div class="mui-panel">
+          <table class="mui-table">
+            <thead>
+              <tr>
+                <th>Názov</th>
+                <th>Popis</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Prasiatko
+              </td>
+                <td>Staraj sa o svoje prasiatko</td>
+                <td><a href="virtual-pig">Zahraj si!</a></td>
+              </tr>
+              <tr>
+                <td>vtip</td>
+                <td>porozpravaj sa s pocitacom</td>
+                <td><a href="dialog
+                ">Tu zacni!</a></td>
+              </tr>
+              <tr>
+                <td>chyť ma</td>
+                <td>chytaj kolace jablka a bomby</td>
+                <td><a href="catchMe">HRAJ SA!</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
-</html>
